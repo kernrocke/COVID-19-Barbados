@@ -6,7 +6,7 @@ cls
 
 
 **  GENERAL DO-FILE COMMENTS
-**  Program:		covid_BB_001.do
+**  Program:		covid_BB_002.do
 **  Project:      	COVID-19 Barbados Project
 **	Sub-Project:	SES and Well-Being in Barbados
 **  Analyst:		Kern Rocke
@@ -122,7 +122,7 @@ label value HADS_cat HADS_cat
 cls
 *-------------------------------------------------------------------------------
 *Open log file to store results
-log using "`logpath'/Log/covid_BB_001.log",  replace
+log using "`logpath'/Log/covid_BB_002.log",  replace
 
 *-------------------------------------------------------------------------------
 
