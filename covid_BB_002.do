@@ -162,6 +162,20 @@ label var child_cat "Number of children within household cat"
 label define child_cat 0"0" 1"1" 2"2" 3"3-4" 4">=5"
 label value  child_cat child_cat
 
+*Number of persons within the household category
+gen house_cat = .
+replace house_cat = 1 if how_many_persons_are_there == 1
+replace house_cat = 1 if how_many_persons_are_there == 2
+replace house_cat = 2 if how_many_persons_are_there == 3
+replace house_cat = 2 if how_many_persons_are_there == 4
+replace house_cat = 3 if how_many_persons_are_there == 5
+replace house_cat = 3 if how_many_persons_are_there >= 6
+replace house_cat = . if how_many_persons_are_there == .
+
+label var house_cat "Number of household members cat"
+label define house_cat 1"1-2" 2"3-4" 3">=5" 
+label value house_cat house_cat
+
 cls
 *-------------------------------------------------------------------------------
 *Open log file to store results
