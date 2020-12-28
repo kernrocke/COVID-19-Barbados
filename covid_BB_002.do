@@ -11,7 +11,7 @@ cls
 **	Sub-Project:	SES and Well-Being in Barbados
 **  Analyst:		Kern Rocke
 **	Date Created:	13/12/2020
-**	Date Modified: 	13/12/2020
+**	Date Modified: 	28/12/2020
 **  Algorithm Task: Data managment and preliminary analysis
 
 
@@ -65,7 +65,7 @@ Additionally, all 14 variables within the HADS were coded numerically and
 reversed coded where relevant (Annex 3) and summed horizontally to determine 
 the number of persons within the sample, categorised as clinically depressed 
 (borderline cases and cases). The Cronbach's alpha was used to measure the 
-internal consistency of the HADS, with a reliability coefficient of ³0.70 
+internal consistency of the HADS, with a reliability coefficient of ï¿½0.70 
 denoting relatively high internal consistency. All data was analysed using 
 Stata (version 15, StataCorp, College Station, TX, USA).
 
@@ -99,25 +99,68 @@ label var QOL "Quality of Life Scores"
 *Examine the internal consistency of the HADS scale
 
 **Check for the level of missing data for HADS variables
-misstable sum i_feel_restless_as_i_have - i_can_enjoy_a_good_book_or
+misstable sum i_feel_tense_or_wound_up - i_can_enjoy_a_good_book_or
 
 **Create HADS score (Hospital Anxiety Depression Scale)
-egen HADS = rowtotal(i_feel_restless_as_i_have - i_can_enjoy_a_good_book_or)
-label var HADS "HADS"
 
-sum HADS, detail
-alpha i_feel_restless_as_i_have - i_can_enjoy_a_good_book_or, detail
+*Recode I feel restless variable
+replace i_feel_restless_as_i_have = 3 if i_feel_restless_as_i_have == 4
+label define i_feel_restless_as_i_have  0 "Not at all" 1"Not very much" 2"Quite a lot" ///
+										3"Very much indeed"
+label value i_feel_restless_as_i_have i_feel_restless_as_i_have 
 
-*HADS category
-gen HADS_cat = .
-replace HADS_cat = 1 if HADS<=7 & HADS!=.
-replace HADS_cat = 2 if HADS>=8 & HADS<=10 & HADS!=.
-replace HADS_cat = 3 if HADS>=11 & HADS!=.
+*Depression scale
+egen HADS_depression = rowtotal(feel_sloweddown i_still_enjoy_the_things_i ///
+							   lost_interest_appearance ///
+							   i_can_laugh_and_see_the_fu ///
+							   i_look_forward_with_enjoym i_feel_cheerful ///
+							   i_can_enjoy_a_good_book_or)
+replace HADS_depression = . if i_feel_tense_or_wound_up == .
+label var HADS_depression "HADS Depression Scale"			
+sum HADS_depression, detail
 
-label var HADS_cat "HADS categories"
-label define HADS_cat 1"Normal" 2"Borderline" 3"Case"
-label value HADS_cat HADS_cat
+*HADS Depression category
+gen HADS_DEP_cat = .
+replace HADS_DEP_cat = 1 if HADS_depression<=7 & HADS_depression!=.
+replace HADS_DEP_cat = 2 if HADS_depression>=8 & HADS_depression<=10 & HADS_depression!=.
+replace HADS_DEP_cat = 3 if HADS_depression>=11 & HADS_depression!=.
 
+label var HADS_DEP_cat "HADS Depression categories"
+label define HADS_DEP_cat 1"Normal" 2"Borderline" 3"Case"
+label value HADS_DEP_cat HADS_DEP_cat
+
+*Anxiety Scale
+egen HADS_anxiety = rowtotal(i_feel_tense_or_wound_up i_get_a_sort_of_frightened ///
+							 frightened_2 i_feel_restless_as_i_have ///
+							 i_feel_restless_as_i_have ///
+							 worrying_thoughts_go_throu ///
+							 feel_panic feel_ease)
+replace HADS_anxiety = . if i_feel_tense_or_wound_up == .
+label var HADS_anxiety "HADS Anxiety Scale"
+sum HADS_anxiety, detail
+
+*HADS Anxeity category
+gen HADS_ANX_cat = .
+replace HADS_ANX_cat = 1 if HADS_anxiety<=7 & HADS_anxiety!=.
+replace HADS_ANX_cat = 2 if HADS_anxiety>=8 & HADS_anxiety<=10 & HADS_anxiety!=.
+replace HADS_ANX_cat = 3 if HADS_anxiety>=11 & HADS_anxiety!=.
+
+label var HADS_ANX_cat "HADS anxiety categories"
+label define HADS_ANX_cat 1"Normal" 2"Borderline" 3"Case"
+label value HADS_ANX_cat HADS_ANX_cat
+
+*Children category
+gen child_cat = .
+replace child_cat = 0 if how_many_children_are_in_y == 0
+replace child_cat = 1 if how_many_children_are_in_y ==1 
+replace child_cat = 2 if how_many_children_are_in_y == 2
+replace child_cat = 3 if how_many_children_are_in_y ==3 | how_many_children_are_in_y == 4
+replace child_cat = 4 if how_many_children_are_in_y >=5 
+replace child_cat = . if how_many_children_are_in_y == . 
+
+label var child_cat "Number of children within household cat"
+label define child_cat 0"0" 1"1" 2"2" 3"3-4" 4">=5"
+label value  child_cat child_cat
 
 cls
 *-------------------------------------------------------------------------------
@@ -126,6 +169,27 @@ log using "`logpath'/Log/covid_BB_002.log",  replace
 
 *-------------------------------------------------------------------------------
 
+**INTERNAL CONSISTENCY RESULTS
+
+*HADS Depression Scale
+alpha feel_sloweddown i_still_enjoy_the_things_i ///
+		lost_interest_appearance ///
+		i_can_laugh_and_see_the_fu ///
+		i_look_forward_with_enjoym i_feel_cheerful ///
+		i_can_enjoy_a_good_book_or, item
+
+*HADS Anxiety Scale
+alpha i_feel_tense_or_wound_up i_get_a_sort_of_frightened ///
+		frightened_2 i_feel_restless_as_i_have ///
+		i_feel_restless_as_i_have ///
+		worrying_thoughts_go_throu ///
+		feel_panic feel_ease, item
+
+*HADS Overall
+alpha i_feel_tense_or_wound_up - i_can_enjoy_a_good_book_or, item
+
+*-------------------------------------------------------------------------------		
+		
 *DEMOGRAPHICS (TABLE 1)
 tab gender
 tab age
@@ -134,6 +198,10 @@ tab what_is_the_ethnicity_that
 tab do_you_normally_attend_fai
 tab what_is_your_relationship
 tab occupation
+tab child_cat
+
+sum how_many_persons_are_there // Number of persons living in the household
+sum how_many_children_are_in_y // Number of children living in the household
 
 *-------------------------------------------------------------------------------
 
@@ -155,6 +223,7 @@ tab do_ypu_think_that_poor_phy
 tab are_you_limited 
 tab what_is_the_major_impairme 
 tab were_this_issues_exacerbat
+sum QOL
 
 *-------------------------------------------------------------------------------
 
@@ -218,17 +287,49 @@ oneway QOL what_is_your_highest_level, tab
 
 *-------------------------------------------------------------------------------
 
+*Descriptives for individual HADS variables
+mean i_feel_tense_or_wound_up - i_can_enjoy_a_good_book_or
+
+*Descriptives for HADS scales
+mean HADS_depression HADS_anxiety
+
+*Descriptions for Depression and Anxiety Categories
+
+*Depression
+tab HADS_DEP_cat
+
+*Anxiety
+tab HADS_ANX_cat
+
+**********************************
+
 *Associations between Mental Health and SES (Table 9)
 
+**DEPRESSION
+
 **Income
-tab HADS_cat income_cat, col chi2
-spearman HADS income_cat, stats(rho p)
-oneway HADS income_cat, tab
+tab HADS_DEP_cat income_cat, col chi2
+spearman HADS_depression income_cat, stats(rho p)
+oneway HADS_depression income_cat, tab
 
 **Education
-tab HADS_cat what_is_your_highest_level, col chi2
-spearman HADS what_is_your_highest_level, stats(rho p)
-oneway HADS what_is_your_highest_level, tab
+tab HADS_DEP_cat what_is_your_highest_level, col chi2
+spearman HADS_depression what_is_your_highest_level, stats(rho p)
+oneway HADS_depression what_is_your_highest_level, tab
+
+*--------------------------
+
+**ANXIETY
+
+**Income
+tab HADS_ANX_cat income_cat, col chi2
+spearman HADS_anxiety income_cat, stats(rho p)
+oneway HADS_anxiety income_cat, tab
+
+**Education
+tab HADS_ANX_cat what_is_your_highest_level, col chi2
+spearman HADS_anxiety what_is_your_highest_level, stats(rho p)
+oneway HADS_anxiety what_is_your_highest_level, tab
 
 *-------------------------------------------------------------------------------
 
